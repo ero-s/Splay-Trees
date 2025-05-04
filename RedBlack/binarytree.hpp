@@ -284,11 +284,13 @@ public:
                 right_st = right_st->left;
             }
 
-            if(right_st != rem_node->right)
+            if(right_st != rem_node->right){
                 restructureNode = right_st;
-
-            if(!restructureNode->is_red)
+            }
+                
+            if(!restructureNode->is_red){
                 deleteFix(restructureNode);
+            }
 
 
             int temp = right_st->element;
@@ -299,45 +301,20 @@ public:
         return true;
     }
 
+    void nodeTransplant(node* par, node* curr){
 
-    void zigleft(node* curr) {
-        node* t2 = curr->left;
-        node* par = curr->parent;
-        if (!par) {
-            return;
-        }
-
-        node* gp = par->parent;
-        if (gp) {
-            if (gp->right == par) {
-                gp->right = curr;
-            } else {
-                gp->left = curr;
-            }
-            curr->parent = gp;
-        }
-        curr->left = par;
-        par->parent = curr;
-        par->right = t2;
-        if (t2) {
-            t2->parent = par;
-        }
-        if (!gp) {
+        if(par == root){
             root = curr;
-            curr->parent = NULL;
         }
-    }
-
-    void nodeTransplant(node* u, node* v){
-        if(u == root)
-            root = v;
-        else if(u->parent->left == u)
-            u->parent->left = v;
-        else
-            u->parent->right = v;
-
-        if(v)
-            v->parent = u->parent;
+        else if(par->parent->left == par){
+            par->parent->left = curr;
+        }
+        else{
+            par->parent->right = curr;
+        }
+        if(curr){
+            curr->parent = par->parent;
+        }
     }
 
     // implementation of rotate operation of x where
@@ -351,8 +328,16 @@ public:
         curr->right = parent;
         parent->parent = curr;
         parent->left = right;
-        if(right)
-            right->parent = parent;
+        if(right)right->parent = parent;
+    }
+
+    void zigleft(node* curr) {
+        node *left = curr->left, *parent = curr->parent;
+        nodeTransplant(parent, curr);
+        curr->left = parent;
+        parent->parent = curr;
+        parent->right = left;
+        if(left)left->parent = parent;
     }
 
     // Given the child, find its parent and grandparent. Assume that both are present.
@@ -372,15 +357,6 @@ public:
         if (gp && gp->right == par) {
             gtop_right = true;
         }
-
-        // FOR THE FOLLOWING: Write in each of the if statements a console output
-        // on its corresponding operation (ZIGLEFT, ZIGRIGHT, ZIGZAGLEFT, or ZIGZAGRIGHT)
-
-        // z
-        //  \
-        //   y
-        //    \
-        //     x
         if (gp && gtop_right && ptoc_right) {
 
             if(print)
@@ -389,11 +365,6 @@ public:
             return par;
         }
 
-            // z
-            //   \
-            //     y
-            //    /
-            //   x
         else if (gp && gtop_right) {
             if(print)
                 cout << "ZIGZAGLEFT\n";
@@ -401,36 +372,26 @@ public:
             zigleft(child);
             return child;
         }
-
-            //     z
-            //    /
-            //   y
-            //  /
-            // x
         else if (gp && !ptoc_right) {
             if(print)
                 cout << "ZIGRIGHT\n";
             zigright(par);
             return par;
         }
-
-            //      z
-            //    /
-            //  y
-            //   \
-            //    x
         else if(gp){
             if(print)
                 cout << "ZIGZAGRIGHT\n";
             zigleft(child);
             zigright(child);
             return child;
+
         }else if(ptoc_right){
             if(print)
                 cout << "ZIGLEFT\n";
             zigleft(child);
             return child;
-        }else {
+        }
+        else {
             if(print)
                 cout << "ZIGRIGHT\n";
             zigright(child);
