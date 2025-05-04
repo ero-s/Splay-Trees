@@ -25,9 +25,11 @@ int main(void) {
     return 0;
 }
 int partition(int low, int high) {
+    // get input val using low as index and instantiate green using low
     int pivotVal = Array[low];
     int green = low;
 
+    // check each element starting from low + 1, if less, increment green and swap with current element
     for(int i = low + 1; i <= high; i++){
         if(Array[i] < pivotVal){
             ++green;
@@ -35,9 +37,11 @@ int partition(int low, int high) {
             print();
         }
     }
-
+    //swap current elements of low and green
     swap(Array[low], Array[green]);
     print();
+
+    // return green as index of the pivot
     return green;
   }
 

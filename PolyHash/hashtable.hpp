@@ -12,10 +12,9 @@ class HashTable {
     //  Polynomial Hash Code using a=7
     int hash_code(string key) {
         int code = 0, size = key.size();
-
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++){
             code += (int) (key[i] - 'a' + 1) * pow(7, size - i - 1);
-
+        }
         return code;
     }
 
@@ -36,15 +35,11 @@ public:
     int insert(string key) {
         if(count == N)
             return -1;
-
         int numCollisions = 0, hash = hashfn(key);
-
         while (!table[(hash + (int) pow(numCollisions, 2)) % N].empty()) {
             ++numCollisions;
         }
-
         table[(hash + (int)pow(numCollisions, 2)) % N] = key;
-
         return numCollisions;
     }
 

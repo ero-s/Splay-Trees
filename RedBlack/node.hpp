@@ -1,10 +1,8 @@
-#include <iostream>
-using namespace std;
 
 struct node {
-    int elem;
-    node* left;
-    node* right;
     node* parent;
-    bool isRed;
+    node* right;
+    node* left;
+    bool is_red;
+    int element;
 };

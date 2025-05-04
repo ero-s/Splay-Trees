@@ -1,303 +1,487 @@
 #include "node.hpp"
 #include <iostream>
-#include <stdexcept>
-#include <queue>
-
+#include <cstdlib>
 using namespace std;
-
-class BinaryTree {
-public:
+class BSTree {
     node* root;
     int size;
 
-    bool isLeft(node* n) {
-        node* p = n->parent;
-        return (p && n == p->left);
-    }
-
-    BinaryTree() : root(nullptr), size(0) {}
-
-    node* addRoot(int num) {
-        root = new node;
-        root->elem = num;
-        root->isRed = false;
-        root->parent = nullptr;
-        root->left = nullptr;
-        root->right = nullptr;
-        size++;
-        return root;
-    }
-
-    node* addLeft(node* p, int num) {
-        node* n = new node;
-        n->elem = num;
-        n->isRed = true;
-        n->parent = p;
-        n->left = nullptr;
-        n->right = nullptr;
-        p->left = n;
-        size++;
+    node* create_node(int num, node* parent) {
+        node* n = (node*) malloc( sizeof(node) );
+        n->element = num;
+        n->parent = parent;
+        n->right = NULL;
+        n->left = NULL;
+        n->is_red = true;
         return n;
     }
 
-    node* addRight(node* p, int num) {
-        node* n = new node;
-        n->elem = num;
-        n->isRed = true;
-        n->parent = p;
-        n->left = nullptr;
-        n->right = nullptr;
-        p->right = n;
-        size++;
-        return n;
+    bool search(node* curr, int num) {
+        if (curr == NULL) {
+            return false;
+        }
+        if (num == curr->element) {
+            return true;
+        }
+
+        if (num < curr->element) {
+            return search(curr->left, num);
+        }
+        return search(curr->right, num);
     }
 
-    bool insert_node(node* n, int num) {
-        if (!n) {
-            rebalance_insert(addRoot(num));
-            return true;
+    node* search_node(node* curr, int num) {
+        if (num == curr->element) {
+            return curr;
         }
-        if (num < n->elem) {
-            if (n->left) {
-                return insert_node(n->left, num);
+
+        if (num < curr->element) {
+            if (curr->left != NULL) {
+                return search_node(curr->left, num);
             }
-            node* inserted = addLeft(n, num);
-            rebalance_insert(inserted);
-            return true;
-        } else if (num > n->elem) {
-            if (n->right) {
-                return insert_node(n->right, num);
-            }
-            node* inserted = addRight(n, num);
-            rebalance_insert(inserted);
-            return true;
+            return curr;
         }
-        return false;  // duplicate
+        if (curr->right != NULL) {
+            return search_node(curr->right, num);
+        }
+        return curr;
+    }
+
+public:
+    BSTree() {
+        root = NULL;
+        size = 0;
+    }
+
+    bool search(int num) {
+        return search(root, num);
     }
 
     bool insert(int num) {
-        return insert_node(root, num);
-    }
-
-    void rebalance_insert(node* n) {
-        if (!n) return;
-        if (n == root) {
-            n->isRed = false;
-            return;
-        }
-        node* p = n->parent;
-        node* gp = p ? p->parent : nullptr;
-        if (!p || !gp) return;
-
-        if (p->isRed) {
-            node* uncle = isLeft(p) ? gp->right : gp->left;
-            if (uncle && uncle->isRed) {
-                cout<<"INSERTION VIOLATION: Case 2"<<endl;
-                p->isRed = false;
-                uncle->isRed = false;
-                gp->isRed = true;
-                rebalance_insert(gp);
-            } else {
-                cout<<"INSERTION VIOLATION: Case 1"<<endl;
-                node* m = restructure(n);
-                if (m) {
-                    m->isRed = false;
-                    if (m->left) m->left->isRed = true;
-                    if (m->right) m->right->isRed = true;
+        if (root == NULL) {
+            root = create_node(num, NULL);
+            root->is_red = false;
+            size++;
+            return true;
+        } else {
+            node* parent = search_node(root, num);
+            if (parent->element != num) {
+                node* newest = create_node(num, parent);
+                if (parent->element < num) {
+                    parent->right = newest;
+                } else {
+                    parent->left = newest;
                 }
-            }
-        }
-    }
-
-    node* zigleft(node* curr) {
-        node* y = curr->parent;
-        node* x = y->parent;
-        if (y == root) {
-            root = curr;
-        } else if (x->left == y) {
-            x->left = curr;
-        } else {
-            x->right = curr;
-        }
-        curr->parent = y->parent;
-        y->right = curr->left;
-        if (curr->left) curr->left->parent = y;
-        curr->left = y;
-        y->parent = curr;
-        return curr;
-    }
-
-    node* zigright(node* curr) {
-        node* y = curr->parent;
-        node* x = y->parent;
-        if (y == root) {
-            root = curr;
-        } else if (x->right == y) {
-            x->right = curr;
-        } else {
-            x->left = curr;
-        }
-        curr->parent = y->parent;
-        y->left = curr->right;
-        if (curr->right) curr->right->parent = y;
-        curr->right = y;
-        y->parent = curr;
-        return curr;
-    }
-
-    node* restructure(node* x) {
-        node* y = x->parent;
-        node* z = y ? y->parent : nullptr;
-        if (!y || !z) return nullptr;
-        // LL case
-        if (y == z->left && x == y->left) {
-            zigright(y);
-            return y;
-        }
-        // RR case
-        if (y == z->right && x == y->right) {
-            zigleft(y);
-            return y;
-        }
-        // RL case
-        if (y == z->right && x == y->left) {
-            zigright(x);
-            zigleft(x);
-            return x;
-        }
-        // LR case
-        if (y == z->left && x == y->right) {
-            zigleft(x);
-            zigright(x);
-            return x;
-        }
-        return nullptr;
-    }
-
-	void removeNode(node* n) {
-        bool color = n->isRed;
-        node* x         = (n->right ? n->right : n->left);
-        node* p         = n->parent;
-    
-        // ---- splice as before ----
-        if (root == n) {
-            root = x;
-            if (x) x->parent = NULL;
-        } else {
-            if (p->left == n)      p->left  = x;
-            else                    p->right = x;
-            if (x) x->parent = p;
-        }
-        delete n;
-        size--;
-    
-        // only if we removed a BLACK node do we need to fix double-black
-        if (!color) {
-            resolveDoubleBlack(x, p);
-        }
-    }
-    
-    bool _delete(int num) {
-        return remove(root, num);
-    }
-    
-    bool remove(node* n, int elem) {
-        if (!n) return false;
-        if (elem < n->elem)      return remove(n->left,  elem);
-        else if (elem > n->elem) return remove(n->right, elem);
-        else {
-            if (n->left && n->right) {
-                // two-child case: swap with successor
-                node* tmp = n->right;
-                while (tmp->left) tmp = tmp->left;
-                n->elem = tmp->elem;
-                return remove(n->right, tmp->elem);
-            } else {
-                removeNode(n);
+                size++;
+                node* par = newest->parent;
+                // CHECK for double red violation
+                while (newest->is_red && par->is_red) {
+                    node* sibling = NULL;
+                    if (par->parent->left == par) {
+                        sibling = par->parent->right;
+                    } else {
+                        sibling = par->parent->left;
+                    }
+                    // CASE 1: Sibling s of y is BLACK
+                    if (sibling == NULL || sibling->is_red == false) {
+                        cout << "INSERTION Violation: Case 1" << endl;
+                        node* b = restructure(newest, true);
+                        b->is_red = false;
+                        b->left->is_red = true;
+                        b->right->is_red = true;
+                        break;
+                    } else if (sibling->is_red == true) {
+                        cout << "INSERTION Violation: Case 2" << endl;
+                        sibling->is_red = false;
+                        par->is_red = false;
+                        if (par->parent != root) {
+                            par->parent->is_red = true;
+                            newest = par->parent;
+                            par = newest->parent;
+                        }
+                    }
+                }
                 return true;
             }
         }
+        print();
+        return false;
     }
-    
-    void resolveDoubleBlack(node* x, node* p) {
-        while (x != root && (x == NULL || !x->isRed)) {
-            bool isLeft = (p->left == x);
-            node* w = isLeft ? p->right : p->left;
-    
-            // IF SIBLING IS RED
-            if (w && w->isRed) {
-                w->isRed = false;
-                p->isRed = true;
-                if (isLeft) zigright(w);
-                else         zigleft(w);
-                w = isLeft ? p->right : p->left;
-            }
-    
-            // IF SIBLING IS BLACK WITH BOTH BLACK CHILDREN
-            if (w
-                && (!w->left  || !w->left->isRed)
-                && (!w->right || !w->right->isRed))
-            {
-                if (w) w->isRed = true;
-                x = p;
-                p = x->parent;
-            }
-            else { // IF SIBLING IS BLACK WITH 1 RED AND 1 BLACK CHILD
-                w = isLeft ? p->right : p->left;
-    
-                // NEAR KID RED
-                if (isLeft
-                    && w
-                    && (!w->right || !w->right->isRed)
-                    &&  w->left && w->left->isRed)
-                {
-                    w->left->isRed = false;
-                    w->isRed = true;
-                    zigright(w->left);
-                    w = p->right;
+    //Case 1 -> Print restructure;
+
+    void deleteFix(node* n){
+        // set N as currNode and loop while currNode has parent and currNode isnt black
+        node* currNode = n;
+        while(currNode->parent && !currNode->is_red){
+            node* sibling;
+
+            // if sibling is right
+            if(currNode->parent->left == currNode && currNode->parent->right){
+                sibling = currNode->parent->right;
+                if(sibling->is_red){
+                    // if sibling is red, set color of currNode as red and sibling's as black, perform restructure passing sibling then update sibling
+                    cout << "DELETION Violation: Case 3\n";
+                    currNode->parent->is_red = true;
+                    sibling->is_red = false;
+                    restructure(sibling, false);
+                    sibling = currNode->parent->right;
                 }
-                else if (!isLeft
-                         && w
-                         && (!w->left || !w->left->isRed)
-                         &&  w->right && w->right->isRed)
+
+                if(
+                        (!sibling->right && !sibling->left) ||
+                        (sibling->right && sibling->left && !sibling->right->is_red && !sibling->left->is_red))
                 {
-                    w->right->isRed = false;
-                    w->isRed = true;
-                    zigleft(w->right);
-                    w = p->left;
+                    // if sibling's children are all black, set sibling as red and currNode to its parent
+                    cout << "DELETION Violation: Case 2\n";
+                    sibling->is_red = true;
+                    currNode = currNode->parent;
+                }else{
+                    cout << "DELETION Violation: Case 1\n";
+                    // if sibling has a right child , set its color to the color of parent, then set its right child's and it parent's color to black, then restructure passing the right child
+                    if(sibling->right) {
+                        sibling->is_red = currNode->parent->is_red;
+                        sibling->right->is_red = currNode->parent->is_red = false;
+                        restructure(sibling->right, true);
+                    }else if(sibling->left && sibling->left->is_red){
+                        // if sibling has a left child and is red, set its color to red, then set its right child's and it parent's color to black, then restructure passing the left child
+                       sibling->left->is_red = true;
+                       currNode->parent->is_red = sibling->is_red = false;
+                       restructure(sibling->left, true);
+
+                        // if sibling has a left child, set its child's color to the color of its parent, then set its color to black 
+                       if(sibling->left)sibling->left->is_red = currNode->parent->is_red;
+                        sibling->is_red = false;
+                    }else{
+
+                        // else, set its color to the color of the parent, then set hte parent's color to black, then restructure passing sibling
+                        sibling->is_red = currNode->parent->is_red;
+                        currNode->parent->is_red = false;
+                        restructure(sibling, true);
+                    }
+                    currNode = root;
                 }
-    
-                // FAR KID RED
-                if (w) w->isRed = p->isRed;
-                p->isRed = false;
-                if (isLeft && w->right)     w->right->isRed = false;
-                else if (!isLeft && w->left) w->left->isRed  = false;
-    
-                if (isLeft)     zigright(w);
-                else             zigleft(w);
-                x = root;  
-                break;
-            }
+            }else if(currNode->parent->right == currNode && currNode->parent->left){
+                // same thing but in reverse
+                sibling = currNode->parent->left;
+                if(sibling->is_red){
+                    cout << "DELETION Violation: Case 3\n";
+                    currNode->parent->is_red = true;
+                    sibling->is_red = false;
+                    restructure(sibling, false);
+                    sibling = currNode->parent->left;
+                }
+                if(
+                        (!sibling->right && !sibling->left) ||
+                        (sibling->right && sibling->left && !sibling->right->is_red && !sibling->left->is_red))
+                {
+                    cout << "DELETION Violation: Case 2\n";
+                    sibling->is_red = true;
+                    currNode = currNode->parent;
+                }else{
+                    cout << "DELETION Violation: Case 1\n";
+                    if(sibling->left){
+                        sibling->is_red = currNode->parent->is_red;
+                        sibling->left->is_red = currNode->parent->is_red = false;
+                        restructure(sibling->left, true);
+                    }else if(sibling->right && sibling->right->is_red){
+                        sibling->right->is_red = true;
+                        currNode->parent->is_red = sibling->is_red = false;
+                        restructure(sibling->right, true);
+                        if(sibling->right)
+                            sibling->right->is_red = currNode->parent->is_red;
+                        sibling->is_red = false;
+                    }else {
+                        sibling->is_red = currNode->parent->is_red;
+                        currNode->parent->is_red = false;
+                        restructure(sibling, true);
+                    }
+                    currNode = root;
+                }
+            }else
+                // else, set currNode to its parent
+                currNode = currNode->parent;
         }
-        if (x) x->isRed = false;
+        // set it to black
+        currNode->is_red = false;
     }
 
-    void print() {
-        cout << "Size: " << size << endl;
-        if (!root) {
-            cout << "EMPTY" << endl;
+    bool remove(int num) {
+        if (isEmpty()) {
+            return false;
+        }
+        node* rem_node = search_node(root, num);
+        if (rem_node->element != num) {
+            return false;
+        }
+
+        // FIND the number of children.
+        int children = 0;
+        // 0 - no children
+        // -1 - left child only
+        // 1 - right child only
+        // 2 - both children
+        if (rem_node->right) {
+            children = 1;
+        }
+        if (rem_node->left) {
+            if (children == 1) {
+                children = 2;
+            } else {
+                children = -1;
+            }
+        }
+
+        if (children == 0) { // NO CHILDREN
+            node* parent = rem_node->parent;
+
+            if(!rem_node->is_red){
+                deleteFix(rem_node);
+            }
+
+            if (!parent) {
+                root = NULL;
+            } else {
+                if (rem_node == parent->left) {
+                    parent->left = NULL;
+                } else {
+                    parent->right = NULL;
+                }
+            }
+
+
+            free(rem_node);
+            size--;
+        } else if (children == -1 || children == 1) { // ONE CHILD
+            node* parent = rem_node->parent;
+            node* child;
+            if (children == -1) {
+                child = rem_node->left;
+            } else {
+                child = rem_node->right;
+            }
+
+            child->parent = parent;
+
+            if (!parent) {
+                root = child;
+            } else {
+                if (parent->left == rem_node) {
+                    parent->left = child;
+                } else {
+                    parent->right = child;
+                }
+            }
+
+            deleteFix(child);
+
+            free(rem_node);
+            size--;
+        } else { // TWO CHILDREN
+            node* restructureNode = rem_node;
+
+            node* right_st = rem_node->right;
+            while (right_st->left != NULL) {
+                right_st = right_st->left;
+            }
+
+            if(right_st != rem_node->right)
+                restructureNode = right_st;
+
+            if(!restructureNode->is_red)
+                deleteFix(restructureNode);
+
+
+            int temp = right_st->element;
+            remove(temp);
+            rem_node->element = temp;
+        }
+
+        return true;
+    }
+
+
+    void zigleft(node* curr) {
+        node* t2 = curr->left;
+        node* par = curr->parent;
+        if (!par) {
             return;
         }
-        cout << root->elem << (root->isRed?"(R)":"(B)") << " (root)" << endl;
-        if (root->left) print_node("    ", root->left, true);
-        if (root->right) print_node("    ", root->right, false);
+
+        node* gp = par->parent;
+        if (gp) {
+            if (gp->right == par) {
+                gp->right = curr;
+            } else {
+                gp->left = curr;
+            }
+            curr->parent = gp;
+        }
+        curr->left = par;
+        par->parent = curr;
+        par->right = t2;
+        if (t2) {
+            t2->parent = par;
+        }
+        if (!gp) {
+            root = curr;
+            curr->parent = NULL;
+        }
     }
 
-    void print_node(const string& prefix, node* n, bool isLeft) {
-        cout << prefix << (isLeft?"+--L: ":"+--R: ")
-             << n->elem << (n->isRed?"(R)":"(B)") << endl;
-        string childPrefix = prefix + "    ";
-        if (n->left) print_node(childPrefix, n->left, true);
-        if (n->right) print_node(childPrefix, n->right, false);
+    void nodeTransplant(node* u, node* v){
+        if(u == root)
+            root = v;
+        else if(u->parent->left == u)
+            u->parent->left = v;
+        else
+            u->parent->right = v;
+
+        if(v)
+            v->parent = u->parent;
+    }
+
+    // implementation of rotate operation of x where
+    //   |
+    //   y
+    //  /
+    // x <- curr
+    void zigright(node* curr) {
+        node *right = curr->right, *parent = curr->parent;
+        nodeTransplant(parent, curr);
+        curr->right = parent;
+        parent->parent = curr;
+        parent->left = right;
+        if(right)
+            right->parent = parent;
+    }
+
+    // Given the child, find its parent and grandparent. Assume that both are present.
+    // Return the parent node (or b) after the restructure.
+    node* restructure(node* child, bool print) {
+        node* par = child->parent;
+        // This is an indicator of the placement of parent to child (ptoc)
+
+        bool ptoc_right = false;
+        if (par->right == child) {
+            ptoc_right = true;
+        }
+
+        node* gp = par->parent;
+        // This is an indicator of the placement of grandparent to parent (gtop)
+        bool gtop_right = false;
+        if (gp && gp->right == par) {
+            gtop_right = true;
+        }
+
+        // FOR THE FOLLOWING: Write in each of the if statements a console output
+        // on its corresponding operation (ZIGLEFT, ZIGRIGHT, ZIGZAGLEFT, or ZIGZAGRIGHT)
+
+        // z
+        //  \
+        //   y
+        //    \
+        //     x
+        if (gp && gtop_right && ptoc_right) {
+
+            if(print)
+                cout << "ZIGLEFT\n";
+            zigleft(par);
+            return par;
+        }
+
+            // z
+            //   \
+            //     y
+            //    /
+            //   x
+        else if (gp && gtop_right) {
+            if(print)
+                cout << "ZIGZAGLEFT\n";
+            zigright(child);
+            zigleft(child);
+            return child;
+        }
+
+            //     z
+            //    /
+            //   y
+            //  /
+            // x
+        else if (gp && !ptoc_right) {
+            if(print)
+                cout << "ZIGRIGHT\n";
+            zigright(par);
+            return par;
+        }
+
+            //      z
+            //    /
+            //  y
+            //   \
+            //    x
+        else if(gp){
+            if(print)
+                cout << "ZIGZAGRIGHT\n";
+            zigleft(child);
+            zigright(child);
+            return child;
+        }else if(ptoc_right){
+            if(print)
+                cout << "ZIGLEFT\n";
+            zigleft(child);
+            return child;
+        }else {
+            if(print)
+                cout << "ZIGRIGHT\n";
+            zigright(child);
+            return child;
+        }
+    }
+
+    // WARNING. Do not modify these methods below.
+    // Doing so will nullify your score for this activity.
+    void print() {
+		cout << "Size: " << size << endl;
+		if (!root) {
+			cout << "EMPTY" << endl;
+			return;
+		}
+		node* curr = root;
+		print_node("", root, false);
+    }
+
+    void print_node(string prefix, node* n, bool isLeft) {
+		cout << prefix;
+			cout << (isLeft ? "+--L: " : "+--R: " );
+			cout << n->element;
+            if(n->is_red){
+                cout<<"(Red)";
+            }else{
+                cout<<"(Black)";
+            }
+            cout<<endl;
+		if (n->left) {
+			print_node(prefix + "|   ", n->left, true);
+		}
+		if (n->right) {
+			print_node(prefix + "|   ", n->right, false);
+		}
+    }
+
+    bool isEmpty() {
+        return size == 0;
+    }
+
+    // WARNING. Do not modify this method.
+    // Doing so will nullify your score for this activity.
+    bool check_health(node* curr, node* parent) {
+        bool health = curr->parent == parent;
+        if (curr->left != NULL) {
+            health &= check_health(curr->left, curr);
+        }
+        if (curr->right != NULL) {
+            health &= check_health(curr->right, curr);
+        }
+        return health;
     }
 };

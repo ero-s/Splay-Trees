@@ -1,40 +1,36 @@
 #include "binarytree.hpp"
 #include <iostream>
 using namespace std;
+int main() {
+    BSTree* tree = new BSTree();
 
-int main(){
-    BinaryTree* tree = new BinaryTree();
-    int choice;
+    char op;
     int num;
-    
-    do{
-        cout << "1. insert" <<endl;
-        cout << "2. delete" <<endl;
-        cout << "3. print" << endl;
-        cout << "Enter choice: ";
-        cin >> choice;
-        cout << endl;
-        
-        switch(choice){
-            case 1:
-                cout << "Enter element to insert: ";
+    do {
+        cout << "Operation: ";
+        cin >> op;
+        switch (op) {
+            case 'i':
                 cin >> num;
-                
                 tree->insert(num);
-                cout << endl;
                 break;
-            case 2:
-                cout << "Enter element to delete: ";
+            case 's':
                 cin >> num;
-                tree->_delete(num);
-                cout << endl;
+                tree->search(num);
                 break;
-            case 3:
+            case 'd':
+                cin >> num;
+                tree->remove(num);
+                break;
+            case 'p':
                 tree->print();
-                cout << endl << endl;
-                break;     
+                break;
+            case 'x':
+                cout << "Exiting";
+                break;
+            default:
+                cout << "Invalid operation";
         }
-    }while(choice != 0);
-
+    } while (op != 'x');
     return 0;
-}
+};
