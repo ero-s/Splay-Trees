@@ -269,27 +269,27 @@ class BSTree {
     }
     
     void print() {
-		cout << "Size: " << size << endl;
-		if (!root) {
-			cout << "EMPTY" << endl;
-			return;
-		}
-		node* curr = root;
-		print_node("", root, false);
-        cout << "Status: " << check_parent(root, NULL) << endl;
-	}
+      cout << "Size: " << size << endl;
+      if (!root) {
+        cout << "EMPTY" << endl;
+        return;
+      }
+      node* curr = root;
+      print_node("", root, false);
+          cout << "Status: " << check_parent(root, NULL) << endl;
+    }
 
-	void print_node(string prefix, node* n, bool isLeft) {
-		cout << prefix;
-        cout << (isLeft ? "+--L: " : "+--R: " );
-        cout << n->element << endl;
-		if (n->left) {
-			print_node(prefix + "|   ", n->left, true);
-		}
-		if (n->right) {
-			print_node(prefix + "|   ", n->right, false);
-		}
-	}
+    void print_node(string prefix, node* n, bool isLeft) {
+      cout << prefix;
+          cout << (isLeft ? "+--L: " : "+--R: " );
+          cout << n->element << endl;
+      if (n->left) {
+        print_node(prefix + "|   ", n->left, true);
+      }
+      if (n->right) {
+        print_node(prefix + "|   ", n->right, false);
+      }
+    }
 
     bool check_parent(node* curr, node* par) {
         if (!curr) {
