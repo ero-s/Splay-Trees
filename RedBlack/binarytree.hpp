@@ -174,121 +174,121 @@ public:
         return nullptr;
     }
 
-	   // void removeNode(node* n) {
-    //     Color origColor = n->color;
-    //     node* x         = (n->right ? n->right : n->left);
-    //     node* p         = n->parent;
+	void removeNode(node* n) {
+        bool color = n->isRed;
+        node* x         = (n->right ? n->right : n->left);
+        node* p         = n->parent;
     
-    //     // ---- splice as before ----
-    //     if (root == n) {
-    //         root = x;
-    //         if (x) x->parent = NULL;
-    //     } else {
-    //         if (p->left == n)      p->left  = x;
-    //         else                    p->right = x;
-    //         if (x) x->parent = p;
-    //     }
-    //     delete n;
-    //     size--;
+        // ---- splice as before ----
+        if (root == n) {
+            root = x;
+            if (x) x->parent = NULL;
+        } else {
+            if (p->left == n)      p->left  = x;
+            else                    p->right = x;
+            if (x) x->parent = p;
+        }
+        delete n;
+        size--;
     
-    //     // only if we removed a BLACK node do we need to fix double-black
-    //     if (origColor == BLACK) {
-    //         resolveDoubleBlack(x, p);
-    //     }
-    // }
+        // only if we removed a BLACK node do we need to fix double-black
+        if (!color) {
+            resolveDoubleBlack(x, p);
+        }
+    }
     
-    // bool _delete(int num) {
-    //     return remove(root, num);
-    // }
+    bool _delete(int num) {
+        return remove(root, num);
+    }
     
-    // bool remove(node* n, int elem) {
-    //     if (!n) return false;
-    //     if (elem < n->elem)      return remove(n->left,  elem);
-    //     else if (elem > n->elem) return remove(n->right, elem);
-    //     else {
-    //         if (n->left && n->right) {
-    //             // two-child case: swap with successor
-    //             node* tmp = n->right;
-    //             while (tmp->left) tmp = tmp->left;
-    //             n->elem = tmp->elem;
-    //             return remove(n->right, tmp->elem);
-    //         } else {
-    //             removeNode(n);
-    //             return true;
-    //         }
-    //     }
-    // }
+    bool remove(node* n, int elem) {
+        if (!n) return false;
+        if (elem < n->elem)      return remove(n->left,  elem);
+        else if (elem > n->elem) return remove(n->right, elem);
+        else {
+            if (n->left && n->right) {
+                // two-child case: swap with successor
+                node* tmp = n->right;
+                while (tmp->left) tmp = tmp->left;
+                n->elem = tmp->elem;
+                return remove(n->right, tmp->elem);
+            } else {
+                removeNode(n);
+                return true;
+            }
+        }
+    }
     
-    // void resolveDoubleBlack(node* x, node* p) {
-    //     // x may be NULL (treat as black), but we always have p
-    //     while (x != root && (x == NULL || x->color == BLACK)) {
+    void resolveDoubleBlack(node* x, node* p) {
+        // x may be NULL (treat as black), but we always have p
+        while (x != root && (x == NULL || !x->isRed)) {
     
-    //         // are we on the left or right of p?
-    //         bool isLeft = (p->left == x);
+            // are we on the left or right of p?
+            bool isLeft = (p->left == x);
     
-    //         node* w = isLeft ? p->right : p->left;
+            node* w = isLeft ? p->right : p->left;
     
-    //         // --- Case 1: red sibling ---
-    //         if (w && w->color == RED) {
-    //             w->color = BLACK;
-    //             p->color = RED;
-    //             if (isLeft) zigLeft(w);
-    //             else         zigRight(w);
-    //             // new sibling
-    //             w = isLeft ? p->right : p->left;
-    //         }
+            // --- Case 1: red sibling ---
+            if (w && w->isRed) {
+                w->isRed = false;
+                p->isRed = true;
+                if (isLeft) zigright(w);
+                else         zigleft(w);
+                // new sibling
+                w = isLeft ? p->right : p->left;
+            }
     
-    //         // --- Case 2: black sibling, both kids black ---
-    //         if (w
-    //             && (!w->left  || w->left->color  == BLACK)
-    //             && (!w->right || w->right->color == BLACK))
-    //         {
-    //             if (w) w->color = RED;
-    //             x = p;
-    //             p = x->parent;
-    //         }
-    //         else {
-    //             // ensure we have up-to-date w
-    //             w = isLeft ? p->right : p->left;
+            // --- Case 2: black sibling, both kids black ---
+            if (w
+                && (!w->left  || !w->left->isRed)
+                && (!w->right || !w->right->isRed))
+            {
+                if (w) w->isRed = true;
+                x = p;
+                p = x->parent;
+            }
+            else {
+                // ensure we have up-to-date w
+                w = isLeft ? p->right : p->left;
     
-    //             // --- Case 3: sibling black, near kid red, far kid black ---
-    //             if (isLeft
-    //                 && w
-    //                 && (!w->right || w->right->color == BLACK)
-    //                 &&  w->left && w->left->color == RED)
-    //             {
-    //                 w->left->color = BLACK;
-    //                 w->color       = RED;
-    //                 zigRight(w->left);
-    //                 w = p->right;
-    //             }
-    //             else if (!isLeft
-    //                      && w
-    //                      && (!w->left || w->left->color == BLACK)
-    //                      &&  w->right && w->right->color == RED)
-    //             {
-    //                 w->right->color = BLACK;
-    //                 w->color        = RED;
-    //                 zigLeft(w->right);
-    //                 w = p->left;
-    //             }
+                // --- Case 3: sibling black, near kid red, far kid black ---
+                if (isLeft
+                    && w
+                    && (!w->right || !w->right->isRed)
+                    &&  w->left && w->left->isRed)
+                {
+                    w->left->isRed = false;
+                    w->isRed = true;
+                    zigright(w->left);
+                    w = p->right;
+                }
+                else if (!isLeft
+                         && w
+                         && (!w->left || !w->left->isRed)
+                         &&  w->right && w->right->isRed)
+                {
+                    w->right->isRed = false;
+                    w->isRed = true;
+                    zigleft(w->right);
+                    w = p->left;
+                }
     
-    //             // --- Case 4: sibling black, far kid red ---
-    //             if (w) w->color = p->color;
-    //             p->color = BLACK;
-    //             if (isLeft && w->right)     w->right->color = BLACK;
-    //             else if (!isLeft && w->left) w->left->color  = BLACK;
+                // --- Case 4: sibling black, far kid red ---
+                if (w) w->isRed = p->isRed;
+                p->isRed = false;
+                if (isLeft && w->right)     w->right->isRed = false;
+                else if (!isLeft && w->left) w->left->isRed  = false;
     
-    //             if (isLeft)     zigLeft(w);
-    //             else             zigRight(w);
+                if (isLeft)     zigright(w);
+                else             zigleft(w);
     
-    //             x = root;  // done
-    //             break;
-    //         }
-    //     }
+                x = root;  // done
+                break;
+            }
+        }
     
-    //     if (x) x->color = BLACK;
-    // }
+        if (x) x->isRed = false;
+    }
 
     void print() {
         cout << "Size: " << size << endl;

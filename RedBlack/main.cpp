@@ -23,16 +23,12 @@ int main(){
                 tree->insert(num);
                 cout << endl;
                 break;
-            // case 2:
-            //     cout << "Enter element to delete: ";
-            //     cin >> num;
-            //     if(tree->_delete(num)){
-            //         cout << num << " is already deleted in the tree" <<endl;
-            //     }else{
-            //         cout << num << " is not deleted in the tree" <<endl;
-            //     }
-            //     cout << endl;
-            //     break;
+            case 2:
+                cout << "Enter element to delete: ";
+                cin >> num;
+                tree->_delete(num);
+                cout << endl;
+                break;
             case 3:
                 tree->print();
                 cout << endl << endl;
