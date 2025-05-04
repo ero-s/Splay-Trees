@@ -220,25 +220,20 @@ public:
     }
     
     void resolveDoubleBlack(node* x, node* p) {
-        // x may be NULL (treat as black), but we always have p
         while (x != root && (x == NULL || !x->isRed)) {
-    
-            // are we on the left or right of p?
             bool isLeft = (p->left == x);
-    
             node* w = isLeft ? p->right : p->left;
     
-            // --- Case 1: red sibling ---
+            // IF SIBLING IS RED
             if (w && w->isRed) {
                 w->isRed = false;
                 p->isRed = true;
                 if (isLeft) zigright(w);
                 else         zigleft(w);
-                // new sibling
                 w = isLeft ? p->right : p->left;
             }
     
-            // --- Case 2: black sibling, both kids black ---
+            // IF SIBLING IS BLACK WITH BOTH BLACK CHILDREN
             if (w
                 && (!w->left  || !w->left->isRed)
                 && (!w->right || !w->right->isRed))
@@ -247,11 +242,10 @@ public:
                 x = p;
                 p = x->parent;
             }
-            else {
-                // ensure we have up-to-date w
+            else { // IF SIBLING IS BLACK WITH 1 RED AND 1 BLACK CHILD
                 w = isLeft ? p->right : p->left;
     
-                // --- Case 3: sibling black, near kid red, far kid black ---
+                // NEAR KID RED
                 if (isLeft
                     && w
                     && (!w->right || !w->right->isRed)
@@ -273,7 +267,7 @@ public:
                     w = p->left;
                 }
     
-                // --- Case 4: sibling black, far kid red ---
+                // FAR KID RED
                 if (w) w->isRed = p->isRed;
                 p->isRed = false;
                 if (isLeft && w->right)     w->right->isRed = false;
@@ -281,12 +275,10 @@ public:
     
                 if (isLeft)     zigright(w);
                 else             zigleft(w);
-    
-                x = root;  // done
+                x = root;  
                 break;
             }
         }
-    
         if (x) x->isRed = false;
     }
 
