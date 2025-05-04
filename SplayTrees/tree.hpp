@@ -7,7 +7,7 @@ class BSTree {
     int size;
 
     node* create_node(int num, node* parent) {
-        node* n = new node;
+        node* n = (node*) malloc( sizeof(node) );
         n->element = num;
         n->parent = parent;
         n->right = NULL;
@@ -32,6 +32,7 @@ class BSTree {
 
     node* search_node(node* curr, int num) {
         if (num == curr->element) {
+        	restructure(curr);
             return curr;
         }
 
@@ -39,7 +40,6 @@ class BSTree {
             if (curr->left != NULL) {
                 return search_node(curr->left, num);
             }
-            return curr;
         }
         if (curr->right != NULL) {
             return search_node(curr->right, num);
@@ -88,12 +88,7 @@ class BSTree {
         return false;
       }
 
-      // FIND the number of children.
       int children = 0;
-      // 0 - no children
-      // -1 - left child only
-      // 1 - right child only
-      // 2 - both children
       if (rem_node->right) {
         children = 1;
       }
@@ -105,7 +100,7 @@ class BSTree {
         }
       }
 
-      if (children == 0) { // NO CHILDREN
+      if (children == 0) {
         node* parent = rem_node->parent;
         if (!parent) {
           root = NULL;
@@ -119,7 +114,7 @@ class BSTree {
 
         free(rem_node);
         size--;
-      } else if (children == -1 || children == 1) { // ONE CHILD
+      } else if (children == -1 || children == 1) {
         node* parent = rem_node->parent;
         node* child;
         if (children == -1) {
@@ -141,7 +136,7 @@ class BSTree {
 
         free(rem_node);
         size--;
-      } else { // TWO CHILDREN
+      } else {
         node* right_st = rem_node->right;
         while (right_st->left != NULL) {
           right_st = right_st->left;
@@ -154,11 +149,6 @@ class BSTree {
       return true;
     }
 
-    // TODO implementation of rotate operation of x where
-    //  |
-    //  y
-    //   \
-    //    x <- curr
     void zigleft(node* curr) {
         node* y = curr->parent;
         node* x = y->parent;
@@ -180,11 +170,6 @@ class BSTree {
         y->parent = curr;
     }
 
-    // TODO implementation of rotate operation of x where
-    //   |
-    //   y
-    //  /
-    // x <- curr
     void zigright(node* curr) {
         node* y = curr->parent;
         node* x = y->parent;
@@ -208,23 +193,18 @@ class BSTree {
 
     }
 
-    // GIVEN the child (or x), find the parent (or y), and the grandparent if any (or z).
-    // Splay the child to the root recursively or iteratively.
     void restructure(node* child) {
-        node* par; // parent
-        // TODO find parent
+        node* par;
         if(child->parent){
             par = child->parent;
         }
-
-        // This is an indicator of the placement of parent to child (ptoc)
+        
         bool ptoc_right = false;
         if (par->right == child) {
             ptoc_right = true;
         }
 
         node* gp;
-        // TODO find grandparent. If gp does not exist, proceed to doing ZIGLEFT or ZIGRIGHT.
         if(par->parent){
             gp = par->parent;
         }
@@ -240,22 +220,12 @@ class BSTree {
             return;
         }
 
-        // This is an indicator of the placement of grandparent to parent (gtop)
         bool gtop_right = false;
         if (gp->right == par) {
             gtop_right = true;
         }
 
-        // FOR THE FOLLOWING: Write in each of the if statements a console output
-        // on its corresponding operation (ZIGZIGLEFT, ZIGZIGRIGHT, ZIGZAGLEFT, or ZIGZAGRIGHT)
-
-      // z
-      //  \
-      //   y
-      //    \
-      //     x
       if (gtop_right && ptoc_right) {
-        // TODO call to either zigleft or zigright or both
         zigleft(par);
         zigleft(child);
         
@@ -263,13 +233,7 @@ class BSTree {
         if(child != root) restructure(child);
       }
 
-      // z
-      //   \
-      //     y
-      //    /
-      //   x
       else if (gtop_right && !ptoc_right) {
-        // TODO call to either zigleft or zigright or both
         zigright(child);
         zigleft(child);
         
@@ -277,13 +241,7 @@ class BSTree {
         if(child != root) restructure(child);
       }
 
-      //     z
-      //    /
-      //   y
-      //  /
-      // x
       else if (!gtop_right && !ptoc_right) {
-        // TODO call to either zigleft or zigright or both
         zigright(par);
         zigright(child);
         
@@ -291,13 +249,7 @@ class BSTree {
         if(child != root) restructure(child);
       }
 
-      //      z
-      //    /
-      //  y
-      //   \
-      //    x
       else {
-        // TODO call to either zigleft or zigright or both
         zigleft(child);
         zigright(child);
         
@@ -308,55 +260,36 @@ class BSTree {
       return;
     }
 
+
     // WARNING. Do not modify the methods below.
     // Doing so will nullify your score for this activity.
-    void print() {
-        if (isEmpty()) {
-            cout << "EMPTY" << endl;
-            return;
-        }
-        cout << "PRE-ORDER: ";
-        print_preorder(root);
-        cout << endl << "IN-ORDER: ";
-        print_inorder(root);
-        cout << endl << "POST-ORDER: ";
-        print_postorder(root);
-        cout << endl << "STATUS: " << check_parent(root, NULL) << endl;
-    }
 
     bool isEmpty() {
         return size == 0;
     }
+    
+    void print() {
+		cout << "Size: " << size << endl;
+		if (!root) {
+			cout << "EMPTY" << endl;
+			return;
+		}
+		node* curr = root;
+		print_node("", root, false);
+        cout << "Status: " << check_parent(root, NULL) << endl;
+	}
 
-    void print_preorder(node* curr) {
-        cout << curr->element << " ";
-        if (curr->left != NULL) {
-            print_preorder(curr->left);
-        }
-        if (curr->right != NULL) {
-            print_preorder(curr->right);
-        }
-    }
-
-    void print_inorder(node* curr) {
-        if (curr->left != NULL) {
-            print_inorder(curr->left);
-        }
-        cout << curr->element << " ";
-        if (curr->right != NULL) {
-            print_inorder(curr->right);
-        }
-    }
-
-    void print_postorder(node* curr) {
-        if (curr->left != NULL) {
-            print_postorder(curr->left);
-        }
-        if (curr->right != NULL) {
-            print_postorder(curr->right);
-        }
-        cout << curr->element << " ";
-    }
+	void print_node(string prefix, node* n, bool isLeft) {
+		cout << prefix;
+        cout << (isLeft ? "+--L: " : "+--R: " );
+        cout << n->element << endl;
+		if (n->left) {
+			print_node(prefix + "|   ", n->left, true);
+		}
+		if (n->right) {
+			print_node(prefix + "|   ", n->right, false);
+		}
+	}
 
     bool check_parent(node* curr, node* par) {
         if (!curr) {

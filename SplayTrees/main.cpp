@@ -18,6 +18,10 @@ int main() {
                 cin >> num;
                 tree->search(num);
                 break;
+            case 'r':
+                cin >> num;
+                tree->remove(num);
+                break;
             case 'd':
                 cin >> num;
                 tree->remove(num);
